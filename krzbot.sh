@@ -6,8 +6,10 @@
 #  https://github.com/whitewillem/PMSF/tree/master/static/data/
 movesfile=/var/www/html/static/data/moves.json
 monsfile=/var/www/html/static/data/pokemon.json
-# This is the name of my Monocle formatted database
+# This is the name of my database
 mondb=new
+# DB format. Only valid options: monocle, rm
+dbtype=monocle
 # Go to https://developer.mapquest.com/ and make a free account, then put the API key here
 key="xxxxxxxxxxxxxxx"
 # zoom level for map, I like 14
@@ -87,8 +89,15 @@ http "$url" < <(sed -e "s,MONNAME,$monname,g" -e "s,LAT,$lat," -e "s,LON,$lon," 
 -e "s,CPVAL,$cp," -e "s,LEVEL,$lvl," -e "s,MOVE1,$move1," -e "s,MOVE2,$move2," -e "s,GENDER,$gender," -e "s,TIMESTAMP,$timestamp," -e "s,KEY,$key," \
 -e "s,LAT,$lat,g" -e "s,LON,$lon,g" -e "s,ZOOM,$zoom," <(body))
 }
+
 query krzbot "select true" >/dev/null 2>&1 || mysql < <( makedb )
 query krzbot "delete from pokemon where expire < unix_timestamp(DATE_ADD(SYSDATE(), INTERVAL -1 HOUR));"
+case "$dbtype" in
+ monocle) dbquery="select pokemon_id, expire_timestamp, encounter_id, lat, lon, atk_iv, def_iv, sta_iv, move_1, move_2, gender, form, cp, level, weather_boosted_condition from sightings where expire_timestamp > unix_timestamp();" ;;
+ rm) dbquery="select pokemon_id, expire_timestamp, encounter_id, lat, lon, atk_iv, def_iv, sta_iv, move_1, move_2, gender, form, cp, level, weather_boosted_condition from ...?" ;;
+ *) echo "dbtype is set to $dbtype but the only valid options are monocle or rm. Fix this before trying to continue" && exit ;;
+esac
+
 while read -r monid expire encounter lat lon attack defense stamina moveid1 moveid2 gender forms cp lvl weathers ;do
 [[ "$attack" != NULL ]] && encounter="${encounter}a${attack}d${defense}s${stamina}" iv=1 || iv=0
 [[ $(query krzbot "select expire from pokemon where monkey='$encounter'") ]] && continue
@@ -166,4 +175,4 @@ case "$monid" in
  248) url="xhttps://discordapp.com/api/webhooks/" && sendmsg         ;; # tyranitar
  201) url="xhttps://discordapp.com/api/webhooks/" && sendmsg         ;; # unown
 esac
-done < <(query "$mondb" "select pokemon_id, expire_timestamp, encounter_id, lat, lon, atk_iv, def_iv, sta_iv, move_1, move_2, gender, form, cp, level, weather_boosted_condition from sightings where expire_timestamp > unix_timestamp();")
+done < <(query "$mondb" "$dbquery")
