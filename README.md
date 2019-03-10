@@ -3,9 +3,9 @@
 Requirements:                              
 
 you need bash, bc, and httpie ( https://httpie.org/ ).
-you may need to modify the query in query() right below.
-You will need to setup webhooks in discord and then set those up below.
-If you want a map you need to make an API key and fill it in above.
+you may need to modify the query in query().
+You will need to setup webhooks in discord and then set those up at ther bottom of the script.
+If you want a map you need to make an API key and fill it in at the top of the script.
 Remember to remove the x from xhttps.
 
 ############################################################################
