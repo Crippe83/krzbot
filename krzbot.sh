@@ -252,7 +252,7 @@ else
  monname=$(grep -A1 \"$bossid\" "$monsfile" |awk -F'"' '/name/{print $4}')
  move1=$(grep -A1 \"$moveid1\" "$movesfile" |tail -n1|awk -F'"' '{print $4}')
  move2=$(grep -A1 \"$moveid2\" "$movesfile" |tail -n1|awk -F'"' '{print $4}')
- extra="\n**CP:** $bosscp \n**Moveset:** ${move1} - ${move2}"
+ extra="\\\n**CP:** $bosscp \\\n**Moveset:** ${move1} - ${move2}"
  title="$monname raid"
  level="lvl $lvl"
  case "$monid" in
@@ -264,7 +264,7 @@ else
   [0-9]) form="0$forms" ;;
   [0-9][0-9]) form="$forms" ;;
  esac
- raidmonurl="xhttps://raw.githubusercontent.com/whitewillem/PogoAssets/resized/icons_large/pokemon_icon_${monnum}_${form}.png"
+ raidmonurl="xhttps://raw.githubusercontent.com/whitewillem/PogoAssets/resized/icons_large/pokemon_icon_${bossid}_${form}.png"
  time=$(date -d @"$expire" +%T)
  secs=$(($expire - $(date +%s)))
  timer="Available until: $time"
