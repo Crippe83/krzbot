@@ -232,7 +232,7 @@ done < <(query "$mondb" "$monquery")
 }
 
 scanraids(){
-while read -r eid gymname lat lon park team lvl bossid bosscp moveid1 moveid2 forms raidstart expire ;do
+while IFS=';' read -r eid gymname lat lon park team lvl bossid bosscp moveid1 moveid2 forms raidstart expire ;do
 [[ $(query krzbot "select expire from raids where raidkey='${eid}${bossid}'") ]] && continue
 query krzbot "insert into raids set raidkey=\"${eid}${bossid}\", expire=$expire;"
 if [[ "$bossid" == NULL ]] ;then
@@ -290,7 +290,7 @@ esac
 case "$lvl" in
  5) url="xhttps://discordapp.com/api/webhooks/" && sendraidmsg ;; # Level5
 esac
-done < <(query "$mondb" "$raidquery")
+done < <(query "$mondb" "$raidquery"|sed 's/\x09/;/g')
 }
 
 checkdb
