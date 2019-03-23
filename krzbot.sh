@@ -8,7 +8,7 @@ movesfile=/var/www/html/static/data/moves.json
 monsfile=/var/www/html/static/data/pokemon.json
 # This is the name of my database
 mondb=mydatabase
-# DB format. Only valid options: monocle (rm support just waiting for rm queries)
+# DB format. Only valid options: monocle / rm
 dbtype=monocle
 # Go to https://developer.mapquest.com/ and make a free account, then put the API key here
 keys=(xxxxxxxxxxxxxxx)
@@ -64,6 +64,46 @@ EOF
 }
 randomkey(){
 echo ${keys[$(echo "$RANDOM$RANDOM % ${#keys[@]}"|bc)]}
+}
+getlevel(){
+case "$cpm" in
+     NULL) lvl="?" ;;
+    0.094) lvl="1" ;;
+ 0.166398) lvl="2" ;;
+ 0.215732) lvl="3" ;;
+  0.25572) lvl="4" ;;
+  0.29025) lvl="5" ;;
+ 0.321088) lvl="6" ;;
+ 0.349213) lvl="7" ;;
+ 0.375236) lvl="8" ;;
+ 0.399567) lvl="9" ;;
+   0.4225) lvl="10" ;;
+ 0.443108) lvl="11" ;;
+ 0.462798) lvl="12" ;;
+ 0.481685) lvl="13" ;;
+ 0.499858) lvl="14" ;;
+ 0.517394) lvl="15" ;;
+ 0.534354) lvl="16" ;;
+ 0.550793) lvl="17" ;;
+ 0.566755) lvl="18" ;;
+ 0.582279) lvl="19" ;;
+   0.5974) lvl="20" ;;
+ 0.612157) lvl="21" ;;
+ 0.626567) lvl="22" ;;
+ 0.640653) lvl="23" ;;
+ 0.654436) lvl="24" ;;
+ 0.667934) lvl="25" ;;
+ 0.681165) lvl="26" ;;
+ 0.694144) lvl="27" ;;
+ 0.706884) lvl="28" ;;
+ 0.719399) lvl="29" ;;
+   0.7317) lvl="30" ;;
+ 0.737769) lvl="31" ;;
+ 0.743789) lvl="32" ;;
+ 0.749761) lvl="33" ;;
+ 0.755686) lvl="34" ;;
+ 0.761564) lvl="35" ;;
+esac
 }
 monbody(){
 cat << "EOF"
@@ -131,26 +171,15 @@ http --output /dev/null "$url" < <(sed -e "s,TITLE,$title," -e "s,LAT,$lat,g" -e
 -e "s,MONURL,$raidmonurl," -e "s,GYMNAME,$gymname," -e "s,LEVEL,$level," -e "s,TIMESTAMP,$timestamp," -e "s,KEY,$key," -e "s,ZOOM,$zoom," \
 -e "s,TEAM,$teamname," <(raidbody))
 }
-
-checkdb(){
-query krzbot "select true" >/dev/null 2>&1 || mysql < <( makedb )
-query krzbot "delete from pokemon where expire < unix_timestamp(DATE_ADD(SYSDATE(), INTERVAL -1 HOUR));"
-query krzbot "delete from raids where expire < unix_timestamp(DATE_ADD(SYSDATE(), INTERVAL -1 HOUR));"
-case "$dbtype" in
- monocle) monquery="select pokemon_id, expire_timestamp, encounter_id, lat, lon, atk_iv, def_iv, sta_iv, move_1, move_2, gender, form, cp, level, weather_boosted_condition from sightings where expire_timestamp > unix_timestamp();"
-          raidquery="select forts.external_id, name, lat, lon, park, team, level, pokemon_id, cp, move_1, move_2, form, time_battle, time_end from forts join raids on raids.fort_id=forts.id join fort_sightings on fort_sightings.fort_id=forts.id where time_end > unix_timestamp();"
-       ;;
-#      rm) monquery="select pokemon_id, expire_timestamp, encounter_id, lat, lon, atk_iv, def_iv, sta_iv, move_1, move_2, gender, form, cp, level, weather_boosted_condition from ...?"
-#          raidquery="select external_id, name, lat, lon, park, team, level, pokemon_id, cp, move_1, move_2, form, time_battle, time_end from ..."
-#       ;;
-       *) echo "dbtype is set to $dbtype but the only valid options are monocle or rm. Fix this before trying to continue" && exit ;;
-esac
-}
 scanmons(){
-while read -r monid expire encounter lat lon attack defense stamina moveid1 moveid2 gender forms cp lvl weathers ;do
+while read -r monid expire encounter lat lon attack defense stamina moveid1 moveid2 gender forms cp cpm weathers ;do
 [[ "$attack" != NULL ]] && encounter="${encounter}a${attack}d${defense}s${stamina}" iv=1 || iv=0
 [[ $(query krzbot "select expire from pokemon where monkey='$encounter'") ]] && continue
 query krzbot "insert into pokemon set monkey=\"$encounter\", expire=$expire;"
+case "$dbtype" in
+ monocle) lvl="$cpm" ;;
+ rm) getlevel ;;
+esac
 monname=$(grep -A1 \"$monid\" "$monsfile" |awk -F'"' '/name/{print $4}')
 time=$(date -d @"$expire" +%T)
 secs=$(($expire - $(date +%s)))
@@ -186,14 +215,12 @@ if (( "$iv" )) ;then
   1)gender=":man:" ;;
   2)gender=":woman:" ;;
  esac
-#(( $percent > 81 ))   && (( $lvl > 32 ))  && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
+(( $percent > 81 ))   && (( $lvl > 32 ))  && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
 (( $percent > 89 ))   && (( $lvl == 35 )) && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
 (( $percent == 100 )) && (( $lvl == 35 )) && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
 (( $percent == 0 ))   && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
 (( $percent == 100 )) && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
-#(( $lvl == 35 ))       && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
-# test
-#(( $percent > 80 ))   && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
+(( $lvl == 35 ))       && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
 else
  attack="?" defense="?" stamina="?" percent="?" move1="?" move2="?" gender="?" lvl="?" cp="?"
 fi
@@ -230,7 +257,6 @@ case "$monid" in
 esac
 done < <(query "$mondb" "$monquery")
 }
-
 scanraids(){
 while IFS=';' read -r eid gymname lat lon park team lvl bossid bosscp moveid1 moveid2 forms raidstart expire ;do
 [[ $(query krzbot "select expire from raids where raidkey='${eid}${bossid}'") ]] && continue
@@ -293,6 +319,18 @@ esac
 done < <(query "$mondb" "$raidquery"|sed 's/\x09/;/g')
 }
 
-checkdb
+query krzbot "select true" >/dev/null 2>&1 || mysql < <( makedb )
+query krzbot "delete from pokemon where expire < unix_timestamp(DATE_ADD(SYSDATE(), INTERVAL -1 HOUR));"
+query krzbot "delete from raids where expire < unix_timestamp(DATE_ADD(SYSDATE(), INTERVAL -1 HOUR));"
+case "$dbtype" in
+ monocle) monquery="select pokemon_id, expire_timestamp, encounter_id, lat, lon, atk_iv, def_iv, sta_iv, move_1, move_2, gender, form, cp, level, weather_boosted_condition from sightings where expire_timestamp > unix_timestamp();"
+          raidquery="select forts.external_id, name, lat, lon, park, team, level, pokemon_id, cp, move_1, move_2, form, time_battle, time_end from forts join raids on raids.fort_id=forts.id join fort_sightings on fort_sightings.fort_id=forts.id where time_end > unix_timestamp();"
+       ;;
+      rm) monquery="SET time_zone = '+00:00' ;select pokemon_id, unix_timestamp(disappear_time), encounter_id, latitude, longitude, individual_attack, individual_defense, individual_stamina, move_1, move_2, gender, form, cp, cp_multiplier, weather_boosted_condition from pokemon where disappear_time > utc_timestamp();"
+          raidquery="SET time_zone = '+00:00' ;select raid.gym_id, name, latitude, longitude, park, team_id, level, pokemon_id, cp, move_1, move_2, raid.form, unix_timestamp(start), unix_timestamp(end) from raid join gym on raid.gym_id=gym.gym_id join gymdetails on raid.gym_id=gymdetails.gym_id where end > utc_timestamp();"
+       ;;
+       *) echo "dbtype is set to $dbtype but the only valid options are monocle or rm. Fix this before trying to continue" && exit ;;
+esac
 scanmons
 scanraids
+
