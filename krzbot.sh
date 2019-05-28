@@ -25,6 +25,11 @@ zoom=14
 # You will need to setup webhooks in discord and then set those up below.  #
 # If you want a map you need to make an API key and fill it in above.      #
 # Remember to remove the x from xhttps.                                    #
+# Install the database schema before you use it.                           #
+# You can decide how and when to run it, i like to use crontab:            #
+# * * * * * /home/pi/runbot.sh                                             #
+# after you edit runbot.sh and change the directory /home/pi/krzbot        #
+# This would make it run every minute if it is not already running.        #
 ############################################################################
 ##############Happy hunting###############krzthehunter######################
 ############################################################################
@@ -43,24 +48,6 @@ zoom=14
 
 query(){
 mysql -NB "$1" -e "$2"
-}
-makedb(){
-cat << "EOF"
-create database krzbot;
-use krzbot;
-create table `pokemon` (
-`monkey` varchar(64) NOT NULL, -- you know, like mon-key :D
-`expire` int(12) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-alter table `pokemon`
- add primary key (`monkey`);
-create table `raids` (
-`raidkey` varchar(64) NOT NULL,
-`expire` int(12) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-alter table `raids`
- add primary key (`raidkey`);
-EOF
 }
 randomkey(){
 echo ${keys[$(echo "$RANDOM$RANDOM % ${#keys[@]}"|bc)]}
@@ -106,6 +93,9 @@ http --output /dev/null "$url" < <(sed -e "s,MONNAME,$monname,g" -e "s,LAT,$lat,
 -e "s,FORM,$form," -e "s,WEATHER,$weather," -e "s,ATTACK,$attack," -e "s,DEFENSE,$defense," -e "s,STAMINA,$stamina," -e "s,PCT,$percent," \
 -e "s,CPVAL,$cp," -e "s,LEVEL,$lvl," -e "s,MOVE1,$move1," -e "s,MOVE2,$move2," -e "s,GENDER,$gender," -e "s,TIMESTAMP,$timestamp," -e "s,KEY,$key," \
 -e "s,ZOOM,$zoom," <(monbody))
+}
+chkgf(){
+ python3 chkgeofence.py -i "$1" -lat "$lat" -lon "$lon" && sendmonmsg
 }
 raidbody(){
 cat << "EOF"
@@ -187,6 +177,8 @@ if (( "$iv" )) ;then
 (( $percent == 0 ))   && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
 (( $percent == 100 )) && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
 (( $lvl == 35 ))       && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
+# send if inside a specific geofence. Don't use this for all mons it will slow you down. thanks cookie!
+(( $percent == 100 )) && url="xhttps://discordapp.com/api/webhooks/" && chkgf "/path/to/geofence.txt"
 else
  attack="?" defense="?" stamina="?" percent="?" move1="?" move2="?" gender="?" lvl="?" cp="?"
 fi
@@ -285,7 +277,10 @@ esac
 done < <(query "$mondb" "$raidquery"|sed 's/\x09/;/g')
 }
 
-query krzbot "select true" >/dev/null 2>&1 || mysql < <( makedb )
+if ! query krzbot "select true" >/dev/null 2>&1 ;then
+ echo "Database schema not installed."
+ exit 1
+fi
 query krzbot "delete from pokemon where expire < unix_timestamp(DATE_ADD(SYSDATE(), INTERVAL -1 HOUR));"
 query krzbot "delete from raids where expire < unix_timestamp(DATE_ADD(SYSDATE(), INTERVAL -1 HOUR));"
 case "$dbtype" in
@@ -298,5 +293,5 @@ case "$dbtype" in
        *) echo "dbtype is set to $dbtype but the only valid options are monocle or rm. Fix this before trying to continue" && exit ;;
 esac
 scanmons
-scanraids
+#scanraids
 
