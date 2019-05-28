@@ -28,7 +28,8 @@ zoom=14
 # Install the database schema before you use it.                           #
 # You can decide how and when to run it, i like to use crontab:            #
 # * * * * * /home/pi/runbot.sh                                             #
-# after you edit runbot.sh and change the directory /home/pi/krzbot        #
+# after you edit runbot.sh and change the directory in the crontab line    #
+# and runbot.sh script.                                                    #
 # This would make it run every minute if it is not already running.        #
 ############################################################################
 ##############Happy hunting###############krzthehunter######################
@@ -293,5 +294,5 @@ case "$dbtype" in
        *) echo "dbtype is set to $dbtype but the only valid options are monocle or rm. Fix this before trying to continue" && exit ;;
 esac
 scanmons
-#scanraids
+scanraids
 

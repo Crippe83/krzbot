@@ -7,8 +7,11 @@ you may need to modify the query in query().
 You will need to setup webhooks in discord and then set those up at ther bottom of the script.
 If you want a map you need to make an API key and fill it in at the top of the script.
 Remember to remove the x from xhttps.
-Install the schema.sql database.
-
+Install the database schema before you use it.
+You can decide how and when to run it, i like to use crontab:
+* * * * * /home/pi/krzbot/runbot.sh
+after you edit runbot.sh and change the directory in the crontab line and runbot.sh script.
+This would make it run every minute if it is not already running.
 ############################################################################
 ##############Happy hunting###############krzthehunter##########################
 ############################################################################
