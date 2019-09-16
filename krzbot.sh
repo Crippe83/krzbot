@@ -59,6 +59,14 @@ for i in ${!pokelevel[@]} ;do
  [[ "${pokelevel[$i]}" == "$cpm" ]] && lvl="$i" && [[ "$cpm" == NULL ]] && lvl="?"
 done
 }
+isditto(){
+if (( "$weathers" > 0 ));then
+ if (( "$attack" < 4 )) || (( "$defense" < 4 )) || (( "$stamina" < 4 )) || (( "$lvl" < 6 )) ;then
+  return 0
+ fi
+fi
+return 1
+}
 monbody(){
 cat << "EOF"
 {
@@ -184,6 +192,7 @@ else
  attack="?" defense="?" stamina="?" percent="?" move1="?" move2="?" gender="?" lvl="?" cp="?"
 fi
 case "$monid" in
+ 46|48|163|165|193|223|293|316) isditto && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg ;; # ditto
  65)  url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # alakazam
  348) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # armaldo
  371|372|373) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg ;; # bagon
@@ -288,7 +297,7 @@ case "$dbtype" in
  monocle) monquery="select pokemon_id, expire_timestamp, encounter_id, lat, lon, atk_iv, def_iv, sta_iv, move_1, move_2, gender, form, cp, level, weather_boosted_condition from sightings where expire_timestamp > unix_timestamp();"
           raidquery="select forts.external_id, name, lat, lon, park, team, level, pokemon_id, cp, move_1, move_2, form, time_battle, time_end from forts join raids on raids.fort_id=forts.id join fort_sightings on fort_sightings.fort_id=forts.id where time_end > unix_timestamp();"
        ;;
-      rm) monquery="SET time_zone = '+00:00' ;select pokemon_id, unix_timestamp(disappear_time), encounter_id, latitude, longitude, individual_attack, individual_defense, individual_stamina, move_1, move_2, gender, form, cp, cp_multiplier, weather_boosted_condition from pokemon where disappear_time > utc_timestamp();"
+      rm) monquery="SET time_zone = '+00:00' ;select pokemon_id, unix_timestamp(disappear_time), encounter_id, latitude, longitude, individual_attack, individual_defense, individual_stamina, move_1, move_2, gender, form, cp, cp_multiplier, weather_boosted_condition from pokemon where disappear_time > utc_timestamp() and concat(encounter_id, 'a', individual_attack, 'd', individual_defense, 's', individual_stamina) not in (select monkey from krzbot.pokemon);"
           raidquery="SET time_zone = '+00:00' ;select raid.gym_id, name, latitude, longitude, park, team_id, level, pokemon_id, cp, move_1, move_2, raid.form, unix_timestamp(start), unix_timestamp(end) from raid join gym on raid.gym_id=gym.gym_id join gymdetails on raid.gym_id=gymdetails.gym_id where end > utc_timestamp();"
        ;;
        *) echo "dbtype is set to $dbtype but the only valid options are monocle or rm. Fix this before trying to continue" && exit ;;
