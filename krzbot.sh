@@ -67,6 +67,12 @@ if (( "$weathers" > 0 ));then
 fi
 return 1
 }
+checkgf(){
+# you must set $topleft and #bottomright with geofence coords like this: topleft="lat,lon"
+IFS=, read -r toplat leftlon <<< "${topleft//.}"
+IFS=, read -r bottomlat rightlon <<< "${bottomright//.}"
+(( $toplat > ${lat//.} )) && (( $bottomlat < ${lat//.} )) && (( $leftlon < ${lon//.} )) && (( $rightlon > ${lon//.} )) && return 0 || return 1
+}
 monbody(){
 cat << "EOF"
 {
@@ -180,48 +186,48 @@ if (( "$iv" )) ;then
   1)gender=":man:" ;;
   2)gender=":woman:" ;;
  esac
-(( $percent > 81 ))   && (( $lvl > 32 ))  && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
-(( $percent > 89 ))   && (( $lvl == 35 )) && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
-(( $percent == 100 )) && (( $lvl == 35 )) && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
-(( $percent == 0 ))   && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
-(( $percent == 100 )) && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
-(( $lvl == 35 ))       && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg
-# send if inside a specific geofence. Don't use this for all mons it will slow you down. thanks cookie!
-(( $percent == 100 )) && url="xhttps://discordapp.com/api/webhooks/" && chkgf "/path/to/geofence.txt"
+(( $percent > 81 ))   && (( $lvl > 32 ))  && url="xhttps://discordapp.com/api/webhooks/" sendmonmsg
+(( $percent > 89 ))   && (( $lvl == 35 )) && url="xhttps://discordapp.com/api/webhooks/" sendmonmsg
+(( $percent == 100 )) && (( $lvl == 35 )) && url="xhttps://discordapp.com/api/webhooks/" sendmonmsg
+(( $percent == 0 ))   && url="xhttps://discordapp.com/api/webhooks/" sendmonmsg
+(( $percent == 100 )) && url="xhttps://discordapp.com/api/webhooks/" sendmonmsg
+(( $lvl == 35 ))       && url="xhttps://discordapp.com/api/webhooks/" sendmonmsg
+# send if inside a specific geofence you need to set topleft and bottomright to points of a rectangle for your area
+(( $percent == 100 )) && topleft="lat,lon" bottomright="lat,lon" checkgf && url="xhttps://discordapp.com/api/webhooks/" sendmonmsg
 else
  attack="?" defense="?" stamina="?" percent="?" move1="?" move2="?" gender="?" lvl="?" cp="?"
 fi
 case "$monid" in
- 46|48|163|165|193|223|293|316) isditto && url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg ;; # ditto
- 65)  url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # alakazam
- 348) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # armaldo
- 371|372|373) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg ;; # bagon
- 374|375|376) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg ;; # beldum
- 242) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # blissey
- 436|437) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg     ;; # bronzor
- 113) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # chansey
- 6) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg           ;; # charizard
- 408|409) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg     ;; # cranidos
- 410|411) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg     ;; # shieldon
- 453|454) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg     ;; # croagunk
- 149) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # dragonite
- 134|135|136|196|197) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg ;; # eeveelutions
- 349) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # feebas
- 456|457) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg     ;; # finneon
- 94) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg          ;; # gengar
- 76) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg          ;; # golem
- 297) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # hariyama
- 115|122|128|130|208|212|272|289|295|306|324|350|369|439) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg  ;; # just in case
- 131) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # lapras
- 246|247) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg     ;; # larvitar
- 270|271|272) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg ;; # lotad
- 68) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg          ;; # machamp
- 280|281|282|475) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg ;; #ralts
- 451|452) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg     ;; # skorupi
- 143) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # snorlax
- 328) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # trapinch
- 248) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # tyranitar
- 201) url="xhttps://discordapp.com/api/webhooks/" && sendmonmsg         ;; # unown
+ 46|48|163|165|193|223|293|316) isditto && url="xhttps://discordapp.com/api/webhooks/" sendmonmsg ;; # ditto
+ 65)  url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # alakazam
+ 348) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # armaldo
+ 371|372|373) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg ;; # bagon
+ 374|375|376) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg ;; # beldum
+ 242) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # blissey
+ 436|437) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg     ;; # bronzor
+ 113) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # chansey
+ 6) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg           ;; # charizard
+ 408|409) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg     ;; # cranidos
+ 410|411) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg     ;; # shieldon
+ 453|454) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg     ;; # croagunk
+ 149) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # dragonite
+ 134|135|136|196|197) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg ;; # eeveelutions
+ 349) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # feebas
+ 456|457) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg     ;; # finneon
+ 94) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg          ;; # gengar
+ 76) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg          ;; # golem
+ 297) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # hariyama
+ 115|122|128|130|208|212|272|289|295|306|324|350|369|439) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg  ;; # just in case
+ 131) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # lapras
+ 246|247) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg     ;; # larvitar
+ 270|271|272) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg ;; # lotad
+ 68) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg          ;; # machamp
+ 280|281|282|475) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg ;; #ralts
+ 451|452) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg     ;; # skorupi
+ 143) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # snorlax
+ 328) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # trapinch
+ 248) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # tyranitar
+ 201) url="xhttps://discordapp.com/api/webhooks/" sendmonmsg         ;; # unown
 esac
 done < <(query "$mondb" "$monquery")
 }
@@ -275,14 +281,14 @@ counter="${min}m ${sec}s"
 timestamp=$(date -u '+%Y-%m-%dT%H:%M:%S')
 key=$(randomkey)
 case "$eid" in #i choose to use forts.external_id
- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xx) url="xhttps://discordapp.com/api/webhooks/" && sendraidmsg ;;
- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xx|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xx) url="xhttps://discordapp.com/api/webhooks/" && sendraidmsg ;;
+ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xx) url="xhttps://discordapp.com/api/webhooks/" sendraidmsg ;;
+ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xx|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xx) url="xhttps://discordapp.com/api/webhooks/" sendraidmsg ;;
 esac
 case "$bossid" in
- 248) url="xhttps://discordapp.com/api/webhooks/" && sendraidmsg ;; # tyranitar
+ 248) url="xhttps://discordapp.com/api/webhooks/" sendraidmsg ;; # tyranitar
 esac
 case "$lvl" in
- 5) url="xhttps://discordapp.com/api/webhooks/" && sendraidmsg ;; # Level5
+ 5) url="xhttps://discordapp.com/api/webhooks/" sendraidmsg ;; # Level5
 esac
 done < <(query "$mondb" "$raidquery"|sed 's/\x09/;/g')
 }
