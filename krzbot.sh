@@ -71,7 +71,9 @@ checkgf(){
 # you must set $topleft and #bottomright with geofence coords like this: topleft="lat,lon"
 IFS=, read -r toplat leftlon <<< "${topleft//.}"
 IFS=, read -r bottomlat rightlon <<< "${bottomright//.}"
-(( $toplat > ${lat//.} )) && (( $bottomlat < ${lat//.} )) && (( $leftlon < ${lon//.} )) && (( $rightlon > ${lon//.} )) && return 0 || return 1
+lat2="${lat//.}"
+lon2="${lon//.}"
+(( $toplat > ${lat2:0:${#toplat}} )) && (( $bottomlat < ${lat2:0:${#bottomlat}} )) && (( $leftlon < ${lon2:0:${#leftlon}} )) && (( $rightlon > ${lon2:0:${#rightlon}} )) && return 0 || return 1
 }
 monbody(){
 cat << "EOF"
